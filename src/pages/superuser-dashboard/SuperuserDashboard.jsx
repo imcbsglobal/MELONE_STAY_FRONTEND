@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import meloneLogo from '../../assets/melone logo.png'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import { apiFetch } from '../../lib/api'
 
 const styles = String.raw`
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap');
@@ -262,7 +263,6 @@ function SuperuserDashboard({ onLogout }) {
   const [formPassword, setFormPassword] = useState('')
   const [formError, setFormError] = useState('')
   const [formSuccess, setFormSuccess] = useState('')
-  const [visiblePasswords, setVisiblePasswords] = useState({})
   const [copiedKey, setCopiedKey] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteError, setDeleteError] = useState('')
@@ -276,7 +276,7 @@ function SuperuserDashboard({ onLogout }) {
 
   const loadAdmins = useCallback(async () => {
     try {
-      const res = await fetch('/api/list-admins/')
+      const res = await apiFetch('/api/list-admins/')
       const data = await res.json()
       if (data.success) setAdminsList(data.admins)
     } catch {}
@@ -303,7 +303,7 @@ function SuperuserDashboard({ onLogout }) {
     setFetchError('')
     setFetchedClient(null)
     try {
-      const res = await fetch('/api/fetch-client/', {
+      const res = await apiFetch('/api/fetch-client/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ client_id: clientIdInput.trim() }),
@@ -330,7 +330,7 @@ function SuperuserDashboard({ onLogout }) {
     setFormSuccess('')
     setCreatingAdmin(true)
     try {
-      const res = await fetch('/api/create-admin/', {
+      const res = await apiFetch('/api/create-admin/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -367,7 +367,7 @@ function SuperuserDashboard({ onLogout }) {
     if (!deleteTarget) return
     setDeleteError('')
     try {
-      const res = await fetch('/api/delete-admin/', {
+      const res = await apiFetch('/api/delete-admin/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: deleteTarget.id, password }),
@@ -392,7 +392,7 @@ function SuperuserDashboard({ onLogout }) {
   const requestEdit = (admin) => {
     setEditTarget(admin)
     setEditUsername(admin.username)
-    setEditPassword(admin.password)
+    setEditPassword('')
     setEditSuperPass('')
     setEditError('')
     setEditSuccess('')
@@ -401,19 +401,18 @@ function SuperuserDashboard({ onLogout }) {
   const handleEditAdmin = async () => {
     if (!editTarget) return
     if (!editUsername.trim()) { setEditError('Username is required'); return }
-    if (!editPassword) { setEditError('Password is required'); return }
     if (!editSuperPass) { setEditError('Superuser password is required'); return }
     setEditError('')
     setEditSuccess('')
     setSavingEdit(true)
     try {
-      const res = await fetch('/api/edit-admin/', {
+      const res = await apiFetch('/api/edit-admin/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editTarget.id,
           username: editUsername.trim(),
-          password: editPassword,
+          ...(editPassword ? { password: editPassword } : {}),
           superuser_password: editSuperPass,
         }),
       })
@@ -430,10 +429,6 @@ function SuperuserDashboard({ onLogout }) {
     } finally {
       setSavingEdit(false)
     }
-  }
-
-  const togglePassword = (id) => {
-    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }))
   }
 
   const copyText = async (text, key) => {
@@ -574,7 +569,7 @@ function SuperuserDashboard({ onLogout }) {
                 <tr>
                   <th style={{ width: 50 }}>No</th>
                   <th>Username</th>
-                  <th>Password</th>
+                  <th>Credential</th>
                   <th>Customer</th>
                   <th>Gmail</th>
                   <th>Package</th>
@@ -588,23 +583,7 @@ function SuperuserDashboard({ onLogout }) {
                   <tr key={a.id}>
                     <td style={{ color: '#8793a4', fontWeight: 600 }}>{i + 1}</td>
                     <td><b style={{ color: '#172131' }}>{a.username}</b></td>
-                    <td>
-                      <div className="cell-actions">
-                        <span className="cell-value" style={{ fontFamily: 'monospace', color: '#3d4f63' }}>{visiblePasswords[a.id] ? a.password : '••••••••'}</span>
-                        <button className="icon-btn" title={visiblePasswords[a.id] ? 'Hide password' : 'Show password'} onClick={() => togglePassword(a.id)}>
-                          {visiblePasswords[a.id]
-                            ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" /><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" /><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>}
-                        </button>
-                        {visiblePasswords[a.id] && (
-                        <button className="icon-btn" title="Copy password" onClick={() => copyText(a.password, `pw-${a.id}`)}>
-                          {copiedKey === `pw-${a.id}`
-                            ? <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-                            : <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>}
-                        </button>
-                        )}
-                      </div>
-                    </td>
+                    <td><span className="cell-value" style={{ color: '#3d4f63' }}>Protected</span></td>
                     <td>{a.customer_name}</td>
                     <td>
                       <div className="cell-actions">
@@ -684,11 +663,11 @@ function SuperuserDashboard({ onLogout }) {
             />
           </div>
           <div className="form-group">
-            <label>Password</label>
+            <label>New password (optional)</label>
             <input
               type="password"
               value={formPassword}
-              placeholder="Enter admin password"
+              placeholder="Leave blank to keep current password"
               onChange={e => setFormPassword(e.target.value)}
               disabled={!fetchedClient || creatingAdmin}
             />
@@ -757,7 +736,7 @@ function SuperuserDashboard({ onLogout }) {
         </div>
         <div className="modal-footer">
           <button className="btn-secondary" onClick={() => setEditTarget(null)}>Cancel</button>
-          <button className="btn-primary" onClick={handleEditAdmin} disabled={!editUsername.trim() || !editPassword || !editSuperPass || savingEdit}>
+          <button className="btn-primary" onClick={handleEditAdmin} disabled={!editUsername.trim() || !editSuperPass || savingEdit}>
             {savingEdit ? <span className="spinner" /> : 'Save Changes'}
           </button>
         </div>

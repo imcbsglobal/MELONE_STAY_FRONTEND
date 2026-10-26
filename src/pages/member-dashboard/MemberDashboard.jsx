@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react'
-import meloneLogo from '../../assets/melone logo.png'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import MemberSidebar from '../../components/layout/Sidebar'
+import RoomCategory from '../../masters/RoomCategory'
+import RoomMaster from '../../masters/RoomMaster'
+import RoomsList from '../../masters/rooms/RoomsList'
+import OtaMaster from '../../masters/ota/OtaMaster'
+import { apiFetch } from '../../lib/api'
 
 const styles = String.raw`
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap');
@@ -45,33 +50,12 @@ const styles = String.raw`
 .member-topbar { position: relative; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 32px; background: rgba(255,255,255,.9); backdrop-filter: blur(10px); border-bottom: 1px solid #e6eaef; }
 .member-topbar h1 { margin: 0; color: #172131; font-size: 18px; font-weight: 700; letter-spacing: -.3px; }
 .member-topbar p { margin: 2px 0 0; color: #8793a4; font-size: 11.5px; }
-.member-topbar-right { display: flex; align-items: center; gap: 12px; }
-.member-topbar-btn { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid #e4e9ef; border-radius: 11px; background: #fff; color: #8793a4; position: relative; transition: background .15s, border-color .15s, color .15s, box-shadow .15s; }
-.member-topbar-btn:hover { background: #f5f7fa; border-color: #d0d7e0; color: #4b6182; box-shadow: 0 4px 12px rgba(39,54,74,.07); }
-.member-topbar-btn svg { width: 17px; height: 17px; }
-.member-topbar-btn .dot { position: absolute; top: 9px; right: 9px; width: 6px; height: 6px; border-radius: 50%; background: #f46b45; box-shadow: 0 0 0 2px #fff; }
 
 .member-content { flex: 1; min-height: 0; overflow-y: auto; padding: 28px 32px; scrollbar-width: thin; scrollbar-color: #c9d3e0 transparent; }
 .member-content::-webkit-scrollbar { width: 8px; }
 .member-content::-webkit-scrollbar-track { background: transparent; }
 .member-content::-webkit-scrollbar-thumb { background: #c9d3e0; border-radius: 999px; }
 
-.member-hero { position: relative; margin-bottom: 24px; padding: 28px 30px; border-radius: 18px; color: #fff; overflow: hidden; background: linear-gradient(115deg, #0f3a24 0%, #1d6a3f 52%, #2e8f5a 100%); box-shadow: 0 18px 40px rgba(20,64,43,.28); }
-.member-hero::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 88% 20%, rgba(255,176,1,.25), transparent 38%), radial-gradient(circle at 12% 110%, rgba(127,220,178,.28), transparent 46%); }
-.member-hero::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #ffb001, #7fc297, transparent); }
-.member-hero .hero-eyebrow { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px; padding: 5px 12px; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; background: rgba(255,255,255,.08); color: #ffd88a; font-size: 9.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; }
-.member-hero .hero-eyebrow::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #ffb001; box-shadow: 0 0 10px #ffb001; }
-.member-hero h2 { position: relative; z-index: 1; margin: 0; font-family: 'Playfair Display', Georgia, serif; font-weight: 500; font-size: clamp(24px, 2.6vw, 32px); letter-spacing: -.5px; line-height: 1.15; }
-.member-hero h2 span { color: #9fe0bd; }
-.member-hero p { position: relative; z-index: 1; margin: 10px 0 0; color: #c6ead4; font-size: 12.5px; max-width: 520px; line-height: 1.6; }
-.member-hero .hero-days { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; margin-top: 20px; }
-.member-hero-identity { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 12px 16px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; background: rgba(255,255,255,.1); max-width: 360px; }
-.member-hero-identity .hero-avatar { width: 42px; height: 42px; font-size: 14px; }
-.member-hero-username { color: #fff; font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.member-hero-meta { margin-top: 2px; color: #9fe0bd; font-size: 10.5px; font-weight: 500; }
-.member-hero .hero-days .hero-badge { display: flex; align-items: baseline; gap: 4px; padding: 8px 16px; border-radius: 12px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.14); }
-.member-hero .hero-days .hero-badge b { font-size: 20px; font-weight: 700; color: #ffd46e; }
-.member-hero .hero-days .hero-badge span { font-size: 10px; color: #c6ead4; font-weight: 600; }
 
 .member-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
 .member-stat { position: relative; padding: 18px; border: 1px solid #e8ecf1; border-radius: 16px; background: #fff; overflow: hidden; transition: box-shadow .2s, transform .2s; box-shadow: 0 1px 2px rgba(39,54,74,.03); }
@@ -81,7 +65,6 @@ const styles = String.raw`
 .member-stat-value { color: #172131; font-size: 19px; font-weight: 700; letter-spacing: -.5px; word-break: break-all; line-height: 1.3; }
 .member-stat-label { color: #8793a4; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .7px; margin-top: 5px; }
 
-.member-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; margin-bottom: 24px; }
 .member-card { border: 1px solid #e8ecf1; border-radius: 16px; background: #fff; overflow: hidden; box-shadow: 0 1px 2px rgba(39,54,74,.03); }
 .member-card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #f0f2f5; }
 .member-card-header h3 { margin: 0; color: #172131; font-size: 13px; font-weight: 700; }
@@ -89,39 +72,10 @@ const styles = String.raw`
 .member-card-header .view-all:hover { text-decoration: underline; }
 .member-card-body { padding: 8px 20px; }
 
-.company-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 0; border-bottom: 1px solid #f4f5f7; }
-.company-row:last-child { border: 0; }
-.company-label { display: flex; align-items: center; gap: 8px; color: #8793a4; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
-.company-label svg { width: 14px; height: 14px; color: #7fb597; }
-.company-value { color: #172131; font-size: 12.5px; font-weight: 600; text-align: right; word-break: break-all; }
-.company-value.mono { font-family: monospace; font-size: 11.5px; }
 
-.member-badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; color: #1d8a6f; background: rgba(29,138,111,.1); }
 
-.license-card { padding: 20px; }
-.license-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-.license-header b { color: #172131; font-size: 13px; }
-.license-header span { color: #8793a4; font-size: 11px; }
-.license-bar { height: 8px; border-radius: 999px; background: #edf1f5; overflow: hidden; }
-.license-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #36b37e, #4fd1a5); box-shadow: 0 0 12px rgba(54,179,126,.5); }
-.license-meta { display: flex; justify-content: space-between; margin-top: 10px; color: #a8b3c2; font-size: 10px; }
-.license-meta b { color: #4b6182; font-weight: 600; }
 
-.activity-list { display: grid; gap: 0; }
-.activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 13px 0; border-bottom: 1px solid #f4f5f7; }
-.activity-item:last-child { border: 0; }
-.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-.activity-text { flex: 1; font-size: 11.5px; color: #3d4f63; line-height: 1.5; }
-.activity-text strong { color: #172131; font-weight: 600; }
-.activity-time { color: #a8b3c2; font-size: 10px; white-space: nowrap; margin-top: 2px; }
 
-.rooms-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.room-tile { padding: 16px 14px; border: 1px solid #eef1f5; border-radius: 12px; background: #fafbfc; text-align: center; transition: border-color .15s, background .15s, transform .15s; }
-.room-tile:hover { border-color: #d6dfe9; background: #fff; transform: translateY(-2px); }
-.room-tile .room-count { font-size: 20px; font-weight: 700; color: #172131; }
-.room-tile .room-label { font-size: 9.5px; color: #8793a4; margin-top: 3px; }
-.room-tile .room-bar { height: 4px; border-radius: 4px; background: #eef1f5; margin-top: 10px; overflow: hidden; }
-.room-tile .room-bar-fill { height: 100%; border-radius: 4px; }
 
 .member-empty { padding: 48px 20px; text-align: center; color: #a8b3c2; }
 .member-empty svg { width: 40px; height: 40px; margin-bottom: 12px; opacity: .4; }
@@ -181,16 +135,54 @@ const styles = String.raw`
 .staff-btn-primary:hover { background: #215432; }
 .staff-btn-primary:disabled { background: #a8b8ad; cursor: not-allowed; box-shadow: none; }
 
-@media (max-width: 1100px) { .member-stats { grid-template-columns: repeat(2, 1fr); } .member-grid { grid-template-columns: 1fr; } .staffs-stats { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 768px) { .member-layout { grid-template-columns: 1fr; } .member-topbar { padding: 14px 18px; } .member-content { padding: 20px 18px; } .member-hero { padding: 24px 20px; } }
-@media (max-width: 560px) { .member-stats { grid-template-columns: 1fr; } .rooms-bar { grid-template-columns: repeat(2, 1fr); } .member-hero .hero-days { flex-direction: column; align-items: flex-start; } .staff-form-grid { grid-template-columns: 1fr; } .staffs-header { flex-direction: column; align-items: flex-start; } }
+.dash-stats, .dash-grid { --logo-green: #2e7d32; --logo-dark: #215432; --logo-orange: #f59e0b; --logo-orange-soft: #fff4de; --logo-green-soft: #e8f3ea; }
+.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+.dash-stat { padding: 18px 20px; border: 1px solid #e8ecf1; border-top: 3px solid var(--logo-green); border-radius: 14px; background: #fff; }
+.dash-stat.is-orange { border-top-color: var(--logo-orange); }
+.dash-stat.is-orange .dash-stat-value { color: #b86e00; }
+.dash-stat.is-green .dash-stat-value { color: var(--logo-dark); }
+.dash-stat-label { color: #6f7d8f; font-size: 12px; font-weight: 600; }
+.dash-stat-value { margin-top: 8px; color: #172131; font-size: 26px; font-weight: 700; letter-spacing: -.5px; line-height: 1.1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dash-stat-note { margin-top: 6px; color: #8793a4; font-size: 11.5px; }
+.dash-grid { display: grid; grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.dash-side { display: grid; gap: 16px; }
+.dash-card { border: 1px solid #e8ecf1; border-radius: 14px; background: #fff; }
+.dash-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f0f2f5; }
+.dash-card-head h3 { position: relative; margin: 0; padding-left: 11px; color: var(--logo-dark); font-size: 14px; font-weight: 700; }
+.dash-card-head h3::before { content: ''; position: absolute; top: 2px; bottom: 2px; left: 0; width: 3px; border-radius: 3px; background: var(--logo-orange); }
+.dash-card-head p { margin: 3px 0 0; color: #8793a4; font-size: 11.5px; }
+.dash-card-body { padding: 16px 20px 20px; }
+.dash-tabs { display: inline-flex; padding: 3px; border-radius: 9px; background: #f0f3f6; flex-shrink: 0; }
+.dash-tabs button { padding: 6px 12px; border: 0; border-radius: 7px; background: transparent; color: #6f7d8f; font: 600 11.5px 'DM Sans', sans-serif; cursor: pointer; }
+.dash-tabs button.is-active { background: var(--logo-dark); color: #fff; box-shadow: 0 2px 6px rgba(33,84,50,.25); }
+.dash-tabs button:focus-visible { outline: 2px solid #215432; outline-offset: 2px; }
+.dash-chart { display: block; width: 100%; height: auto; }
+.dash-chart text { fill: #8793a4; font: 11px 'DM Sans', sans-serif; }
+.dash-chart .grid { stroke: #eef1f5; stroke-width: 1; }
+.dash-chart .line { fill: none; stroke: #2e7d32; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.dash-chart .area { fill: rgba(46,125,50,.1); }
+.dash-chart .dot { fill: #fff; stroke: #f59e0b; stroke-width: 2.5; }
+.dash-chart .guide { stroke: #c9d3e0; stroke-dasharray: 3 3; }
+.dash-chart .tip-box { fill: #215432; }
+.dash-chart .tip-text { fill: #fff; font-weight: 600; }
+.dash-empty { padding: 56px 16px; color: #8793a4; font-size: 12.5px; text-align: center; }
+.dash-license-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.dash-license-top b { color: var(--logo-dark); font-size: 20px; }
+.dash-license-top span { color: #8793a4; font-size: 11.5px; }
+.dash-bar { height: 8px; margin-top: 12px; border-radius: 999px; background: #edf1f5; overflow: hidden; }
+.dash-bar > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #2e7d32, #f59e0b); }
+.dash-rows { display: grid; }
+.dash-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f2f4f7; font-size: 12.5px; }
+.dash-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.dash-row:first-child { padding-top: 0; }
+.dash-row span { color: #8793a4; }
+.dash-row b { min-width: 0; overflow: hidden; color: #172131; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.dash-status { padding: 3px 10px; border-radius: 999px; background: var(--logo-green-soft); color: var(--logo-dark) !important; font-size: 11px; }
+@media (max-width: 560px) { .dash-stats { grid-template-columns: 1fr; } .dash-card-head { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 1100px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } .member-stats { grid-template-columns: repeat(2, 1fr); } .dash-grid { grid-template-columns: 1fr; } .staffs-stats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px) { .member-layout { grid-template-columns: 1fr; } .member-topbar { padding: 14px 18px; } .member-content { padding: 20px 18px; } }
+@media (max-width: 560px) { .member-stats { grid-template-columns: 1fr; } .staff-form-grid { grid-template-columns: 1fr; } .staffs-header { flex-direction: column; align-items: flex-start; } }
 `
-
-const icons = {
-  dashboard: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
-  staffs: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
-  logout: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
-}
 
 function computeLicense(data) {
   let remainingDays = null
@@ -205,11 +197,59 @@ function computeLicense(data) {
   return { remainingDays, pct }
 }
 
+
+function niceCeil(value) {
+  const pow = 10 ** Math.floor(Math.log10(value))
+  const n = value / pow
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * pow
+}
+
+function LineChart({ points, formatValue }) {
+  const [hover, setHover] = useState(null)
+  const W = 640, H = 270, L = 62, R = 24, T = 18, B = 42
+  const top = niceCeil(Math.max(...points.map(p => p.value), 1))
+  const x = i => (points.length === 1 ? (L + W - R) / 2 : L + (i * (W - L - R)) / (points.length - 1))
+  const y = v => T + (H - T - B) * (1 - v / top)
+  const path = points.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.value)}`).join(' ')
+  const area = `${path} L${x(points.length - 1)},${y(0)} L${x(0)},${y(0)} Z`
+  const every = Math.ceil(points.length / 8)
+  const active = hover !== null ? points[hover] : null
+  const tip = active ? formatValue(active.value) : ''
+  const tipWidth = Math.max(active ? active.label.length : 0, tip.length) * 6.6 + 18
+  const tipX = active ? Math.min(Math.max(x(hover) - tipWidth / 2, L), W - R - tipWidth) : 0
+  return (
+    <svg className="dash-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Line graph" onMouseLeave={() => setHover(null)}>
+      {[0, 1, 2, 3, 4].map(i => (
+        <g key={i}>
+          <line className="grid" x1={L} x2={W - R} y1={y((top * i) / 4)} y2={y((top * i) / 4)} />
+          <text x={L - 10} y={y((top * i) / 4) + 4} textAnchor="end">{formatValue((top * i) / 4)}</text>
+        </g>
+      ))}
+      {points.length > 1 && <path className="area" d={area} />}
+      {points.length > 1 && <path className="line" d={path} />}
+      {active && <line className="guide" x1={x(hover)} x2={x(hover)} y1={T} y2={y(0)} />}
+      {points.map((p, i) => (
+        <g key={`${p.label}-${i}`} onMouseEnter={() => setHover(i)}>
+          <rect x={x(i) - 18} y={T} width="36" height={H - T - B} fill="transparent" />
+          <circle className="dot" cx={x(i)} cy={y(p.value)} r={hover === i ? 5.5 : 4} />
+          {i % every === 0 && <text x={x(i)} y={H - 16} textAnchor="middle">{p.label.length > 11 ? `${p.label.slice(0, 10)}…` : p.label}</text>}
+        </g>
+      ))}
+      {active && (
+        <g pointerEvents="none">
+          <rect className="tip-box" x={tipX} y={Math.max(y(active.value) - 50, 2)} width={tipWidth} height="38" rx="7" />
+          <text className="tip-text" x={tipX + tipWidth / 2} y={Math.max(y(active.value) - 50, 2) + 16} textAnchor="middle">{active.label}</text>
+          <text className="tip-text" x={tipX + tipWidth / 2} y={Math.max(y(active.value) - 50, 2) + 31} textAnchor="middle">{tip}</text>
+        </g>
+      )}
+    </svg>
+  )
+}
+
 const STATUS_POLL_INTERVAL = 30000
 
-function MemberDashboard({ admin, onLogout }) {
+function MemberDashboard({ admin, onLogout, route, onNavigate }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [activeNav, setActiveNav] = useState('dashboard')
   const [showStaffModal, setShowStaffModal] = useState(false)
   const [staffEditId, setStaffEditId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', department: '', designation: '', phone: '', username: '', password: '', status: 'Active' })
@@ -220,7 +260,9 @@ function MemberDashboard({ admin, onLogout }) {
   const [staffSaving, setStaffSaving] = useState(false)
   const [staffToRemove, setStaffToRemove] = useState(null)
   const [staffDeleteError, setStaffDeleteError] = useState('')
-  const [visiblePasswords, setVisiblePasswords] = useState({})
+  const [dashRooms, setDashRooms] = useState([])
+  const [dashLoading, setDashLoading] = useState(true)
+  const [dashChart, setDashChart] = useState('rates')
 
   useEffect(() => {
     if (!admin) return
@@ -228,7 +270,7 @@ function MemberDashboard({ admin, onLogout }) {
     let disposed = false
     const checkStatus = async () => {
       try {
-        const res = await fetch(`/api/check-member-status/?client_id=${encodeURIComponent(admin.client_id)}&username=${encodeURIComponent(admin.username)}`)
+        const res = await apiFetch(`/api/check-member-status/?client_id=${encodeURIComponent(admin.client_id)}&username=${encodeURIComponent(admin.username)}`)
         const data = await res.json()
         if (!disposed && data.active === false) {
           onLogout()
@@ -249,7 +291,7 @@ function MemberDashboard({ admin, onLogout }) {
     let disposed = false
     setStaffLoading(true)
     setStaffError('')
-    fetch(`/api/staffs/list/?client_id=${encodeURIComponent(admin.client_id)}`)
+    apiFetch(`/api/staffs/list/?client_id=${encodeURIComponent(admin.client_id)}`)
       .then(res => res.json())
       .then(data => {
         if (disposed) return
@@ -264,17 +306,38 @@ function MemberDashboard({ admin, onLogout }) {
     return () => { disposed = true }
   }, [admin])
 
+  useEffect(() => {
+    if (!admin) return
+
+    let disposed = false
+    apiFetch(`/api/room-master/list/?client_id=${encodeURIComponent(admin.client_id)}`)
+      .then(res => res.json())
+      .then(data => { if (!disposed && data.success) setDashRooms(data.rooms || []) })
+      .catch(() => {})
+      .finally(() => { if (!disposed) setDashLoading(false) })
+    return () => { disposed = true }
+  }, [admin])
+
   if (!admin) {
     return <><style>{styles}</style><div className="member-missing"><div className="member-missing-card"><h2>No active session</h2><p>Please sign in to continue.</p></div></div></>
   }
 
-  const initials = admin.username.slice(0, 2).toUpperCase()
   const { remainingDays, pct } = computeLicense(admin)
+  const roomEditId = route.startsWith('/member/room-master/')
+    ? route.slice('/member/room-master/'.length)
+    : null
 
-  const navItems = [
-    { id: 'dashboard', label: 'Dashboard', count: null, icon: icons.dashboard },
-    { id: 'staffs', label: 'Staffs', count: staffList.length, icon: icons.staffs },
-  ]
+  const activeNav = route === '/member/staffs'
+    ? 'staffs'
+    : route === '/member/room-category'
+      ? 'room-category'
+      : route === '/member/room-master' || roomEditId
+        ? 'room-master'
+        : route === '/member/rooms'
+          ? 'rooms'
+          : route === '/member/ota'
+            ? 'ota'
+            : 'dashboard'
 
   const staffStats = [
     { label: 'Total Staff', value: staffList.length, color: '#215432', bg: 'rgba(33,84,50,.09)' },
@@ -292,14 +355,14 @@ function MemberDashboard({ admin, onLogout }) {
 
   const openEditStaff = (s) => {
     setStaffEditId(s.id)
-    setStaffForm({ name: s.name, department: s.department, designation: s.designation, phone: s.phone, username: s.username, password: s.password, status: s.status })
+    setStaffForm({ name: s.name, department: s.department, designation: s.designation, phone: s.phone, username: s.username, password: '', status: s.status })
     setStaffFormError('')
     setShowStaffModal(true)
   }
 
   const handleSaveStaff = async () => {
     const { name, department, designation, phone, username, password, status } = staffForm
-    if (!name.trim() || !department.trim() || !designation.trim() || !phone.trim() || !username.trim() || !password) {
+    if (!name.trim() || !department.trim() || !designation.trim() || !phone.trim() || !username.trim() || (!staffEditId && !password)) {
       setStaffFormError('All required fields must be filled')
       return
     }
@@ -311,10 +374,10 @@ function MemberDashboard({ admin, onLogout }) {
     setStaffFormError('')
     const url = staffEditId ? '/api/staffs/edit/' : '/api/staffs/create/'
     const payload = staffEditId
-      ? { id: staffEditId, name: name.trim(), department: department.trim(), designation: designation.trim(), phone: phone.trim(), username: username.trim(), password, status }
+      ? { id: staffEditId, name: name.trim(), department: department.trim(), designation: designation.trim(), phone: phone.trim(), username: username.trim(), ...(password ? { password } : {}), status }
       : { client_id: admin.client_id, name: name.trim(), department: department.trim(), designation: designation.trim(), phone: phone.trim(), username: username.trim(), password, status }
     try {
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -341,7 +404,7 @@ function MemberDashboard({ admin, onLogout }) {
     if (!staffToRemove) return
     setStaffDeleteError('')
     try {
-      const res = await fetch('/api/staffs/delete/', {
+      const res = await apiFetch('/api/staffs/delete/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: staffToRemove.id, client_id: admin.client_id, username: admin.username, password }),
@@ -363,131 +426,66 @@ function MemberDashboard({ admin, onLogout }) {
     setStaffToRemove(s)
   }
 
-  const togglePassword = (id) => {
-    setVisiblePasswords(prev => ({ ...prev, [id]: !prev[id] }))
-  }
-
-  const statCards = [
-    { label: 'Gmail', value: admin.client_id, color: '#215432', bg: 'rgba(33,84,50,.09)', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg> },
-    { label: 'Package', value: admin.package, color: '#e09100', bg: 'rgba(255,176,1,.14)', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.29 7 12 12 20.71 7" /><line x1="12" y1="22" x2="12" y2="12" /></svg> },
-    { label: 'Module', value: admin.module_name || '—', color: '#8b5cf6', bg: 'rgba(139,92,246,.1)', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg> },
-    { label: 'License Expiry', value: admin.expiry_date || '—', color: '#36b37e', bg: 'rgba(54,179,126,.1)', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg> },
-  ]
-
-  const activities = [
-    { text: <><strong>System</strong> verified your license for <strong>{admin.module_name || 'Melone Stay'}</strong></>, time: 'today', color: '#36b37e' },
-    { text: <><strong>{admin.package}</strong> plan is active on your account</>, time: 'today', color: '#e09100' },
-    { text: <><strong>Welcome</strong> — your admin workspace is ready</>, time: 'just now', color: '#215432' },
-  ]
-
-  const rooms = [
-    { label: 'Active', count: 24, pct: 68, color: '#36b37e' },
-    { label: 'Draft', count: 6, pct: 24, color: '#ffb001' },
-    { label: 'Archived', count: 4, pct: 16, color: '#a3b1c4' },
-    { label: 'Private', count: 2, pct: 10, color: '#215432' },
-  ]
+  const rateData = dashRooms.map(room => ({ label: room.code || room.name, value: Number(room.prices?.[0]?.amount) || 0 }))
+  const floorCounts = dashRooms.reduce((acc, room) => ({ ...acc, [room.floor]: (acc[room.floor] || 0) + 1 }), {})
+  const floorData = Object.keys(floorCounts).sort((p, q) => p.localeCompare(q, undefined, { numeric: true })).map(floor => ({ label: `Floor ${floor}`, value: floorCounts[floor] }))
+  const chartPoints = dashChart === 'rates' ? rateData : floorData
+  const formatRupee = value => `₹${Math.round(value).toLocaleString('en-IN')}`
+  const formatCount = value => String(Math.round(value))
 
   return <><style>{styles}</style><div className="member-layout">
-    <aside className="member-sidebar">
-      <div className="member-sidebar-header"><img src={meloneLogo} alt="Melone Stay" className="logo-img" /></div>
-      <nav className="member-nav">
-        <div className="nav-section">
-          <div className="nav-section-title">Menu</div>
-          {navItems.map(item => (
-            <button key={item.id} className={`nav-item ${activeNav === item.id ? 'active' : ''}`} onClick={() => setActiveNav(item.id)}>
-              <span className="nav-icon">{item.icon}</span>{item.label}
-              {item.count !== null && <span className="nav-count">{item.count}</span>}
-            </button>
-          ))}
-        </div>
-      </nav>
-      <button className="member-logout" onClick={() => setShowLogoutConfirm(true)}>{icons.logout}<span>Log out</span></button>
-    </aside>
+    <MemberSidebar activeNav={activeNav} staffCount={staffList.length} user={{ name: admin.customer_name || admin.client_id }} onNavigate={onNavigate} onLogoutRequest={() => setShowLogoutConfirm(true)} />
     <div className="member-main">
       <header className="member-topbar">
-        <div><h1>{activeNav === 'staffs' ? 'Staffs' : 'Dashboard'}</h1><p>Welcome back, {admin.username}</p></div>
-        <div className="member-topbar-right">
-          <button className="member-topbar-btn" aria-label="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg><span className="dot" /></button>
-        </div>
+        <div><h1>{activeNav === 'staffs' ? 'Staffs' : activeNav === 'room-category' ? 'Room Category' : activeNav === 'room-master' ? 'Room Master' : activeNav === 'rooms' ? 'Rooms List' : activeNav === 'ota' ? 'OTA Master' : 'Dashboard'}</h1><p>Welcome back, {admin.username}</p></div>
       </header>
       <div className="member-content">
+        {activeNav === 'room-category' && <RoomCategory clientId={admin.client_id} />}
+        {activeNav === 'room-master' && <RoomMaster clientId={admin.client_id} editRoomId={roomEditId} onNavigate={onNavigate} />}
+        {activeNav === 'rooms' && <RoomsList clientId={admin.client_id} onNavigate={onNavigate} />}
+        {activeNav === 'ota' && <OtaMaster clientId={admin.client_id} />}
         {activeNav === 'dashboard' && <>
-          <div className="member-hero">
-            <div className="hero-eyebrow">Admin workspace</div>
-            <h2>Welcome, <span>{admin.customer_name}</span></h2>
-            <p>This is your Melone Stay control centre. Manage your rooms, keep track of your license and stay on top of everything happening for your property.</p>
-            <div className="member-hero-identity">
-              <div className="member-avatar hero-avatar">{initials}</div>
-              <div style={{ minWidth: 0 }}>
-                <div className="member-hero-username">{admin.username}</div>
-                <div className="member-hero-meta">{admin.package} · {admin.customer_name}</div>
-              </div>
-            </div>
-            <div className="hero-days">
-              <div className="hero-badge"><b>{remainingDays !== null ? remainingDays : '—'}</b><span>days left on license</span></div>
-              <div className="hero-badge"><b>{admin.package}</b><span>active plan</span></div>
-            </div>
+          <div className="dash-stats">
+            <div className="dash-stat is-green"><div className="dash-stat-label">Total rooms</div><div className="dash-stat-value">{dashLoading ? '—' : dashRooms.length}</div><div className="dash-stat-note">Configured for your property</div></div>
+            <div className="dash-stat is-orange"><div className="dash-stat-label">Staff members</div><div className="dash-stat-value">{staffLoading ? '—' : staffList.length}</div><div className="dash-stat-note">{staffList.filter(s => s.status === 'Active').length} active</div></div>
+            <div className="dash-stat is-green"><div className="dash-stat-label">License days left</div><div className="dash-stat-value">{remainingDays !== null ? remainingDays : '—'}</div><div className="dash-stat-note">Valid until {admin.expiry_date || '—'}</div></div>
+            <div className="dash-stat is-orange"><div className="dash-stat-label">Package</div><div className="dash-stat-value" title={admin.package}>{admin.package || '—'}</div><div className="dash-stat-note">{admin.module_name || 'Melone Stay'}</div></div>
           </div>
 
-          <div className="member-stats">
-            {statCards.map(s => (
-              <div className="member-stat" key={s.label}>
-                <div className="member-stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
-                <div className="member-stat-value">{s.value}</div>
-                <div className="member-stat-label">{s.label}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="member-grid">
-            <div className="member-card">
-              <div className="member-card-header"><h3>Company Details</h3><button className="view-all">View</button></div>
-              <div className="member-card-body">
-                <div className="company-row"><div className="company-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>Customer Name</div><div className="company-value">{admin.customer_name}</div></div>
-                <div className="company-row"><div className="company-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>Gmail</div><div className="company-value mono">{admin.client_id}</div></div>
-                <div className="company-row"><div className="company-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>Package</div><div className="company-value">{admin.package}</div></div>
-                <div className="company-row"><div className="company-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>Module</div><div className="company-value">{admin.module_name || '—'}</div></div>
-                <div className="company-row"><div className="company-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>License Expiry</div><div className="company-value">{admin.expiry_date || '—'}</div></div>
-                <div className="company-row"><div className="company-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12l2 2 4-4" /><circle cx="12" cy="12" r="10" /></svg>Status</div><div className="company-value"><span className="member-badge">Active</span></div></div>
-              </div>
-            </div>
-            <div>
-              <div className="member-card" style={{ marginBottom: 16 }}>
-                <div className="member-card-header"><h3>License Status</h3></div>
-                <div className="member-card-body license-card">
-                  <div className="license-header"><b>{remainingDays !== null ? `${remainingDays} days remaining` : 'Unlimited'}</b><span>{pct}% of year</span></div>
-                  <div className="license-bar"><div className="license-bar-fill" style={{ width: `${pct}%` }} /></div>
-                  <div className="license-meta"><span>Valid until</span><b>{admin.expiry_date || '—'}</b></div>
+          <div className="dash-grid">
+            <section className="dash-card">
+              <div className="dash-card-head">
+                <div><h3>{dashChart === 'rates' ? 'Room rates' : 'Rooms per floor'}</h3><p>{dashChart === 'rates' ? 'Base rate of each room' : 'Number of rooms on each floor'}</p></div>
+                <div className="dash-tabs" role="tablist" aria-label="Chart type">
+                  <button type="button" role="tab" aria-selected={dashChart === 'rates'} className={dashChart === 'rates' ? 'is-active' : ''} onClick={() => setDashChart('rates')}>Rates</button>
+                  <button type="button" role="tab" aria-selected={dashChart === 'floors'} className={dashChart === 'floors' ? 'is-active' : ''} onClick={() => setDashChart('floors')}>Floors</button>
                 </div>
               </div>
-              <div className="member-card">
-                <div className="member-card-header"><h3>Recent Activity</h3></div>
-                <div className="member-card-body">
-                  <div className="activity-list">
-                    {activities.map((a, i) => (
-                      <div className="activity-item" key={i}>
-                        <div className="activity-dot" style={{ background: a.color }} />
-                        <div className="activity-text">{a.text}<div className="activity-time">{a.time}</div></div>
-                      </div>
-                    ))}
+              <div className="dash-card-body">
+                {dashLoading ? <div className="dash-empty">Loading chart…</div> : chartPoints.length === 0 ? <div className="dash-empty">No rooms yet. Add rooms in Room Master to see this graph.</div> : <LineChart key={dashChart} points={chartPoints} formatValue={dashChart === 'rates' ? formatRupee : formatCount} />}
+              </div>
+            </section>
+
+            <div className="dash-side">
+              <section className="dash-card">
+                <div className="dash-card-head"><h3>License</h3></div>
+                <div className="dash-card-body">
+                  <div className="dash-license-top"><b>{remainingDays !== null ? `${remainingDays} days` : 'Unlimited'}</b><span>{pct}% of year left</span></div>
+                  <div className="dash-bar"><div style={{ width: `${pct}%` }} /></div>
+                </div>
+              </section>
+              <section className="dash-card">
+                <div className="dash-card-head"><h3>Account details</h3></div>
+                <div className="dash-card-body">
+                  <div className="dash-rows">
+                    <div className="dash-row"><span>Customer</span><b>{admin.customer_name}</b></div>
+                    <div className="dash-row"><span>Client ID</span><b>{admin.client_id}</b></div>
+                    <div className="dash-row"><span>Module</span><b>{admin.module_name || '—'}</b></div>
+                    <div className="dash-row"><span>Expiry</span><b>{admin.expiry_date || '—'}</b></div>
+                    <div className="dash-row"><span>Status</span><b className="dash-status">Active</b></div>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="member-card">
-            <div className="member-card-header"><h3>Room Overview</h3><button className="view-all">Details</button></div>
-            <div className="member-card-body">
-              <div className="rooms-bar">
-                {rooms.map(r => (
-                  <div className="room-tile" key={r.label}>
-                    <div className="room-count">{r.count}</div>
-                    <div className="room-label">{r.label} Rooms</div>
-                    <div className="room-bar"><div className="room-bar-fill" style={{ width: r.pct + '%', background: r.color }} /></div>
-                  </div>
-                ))}
-              </div>
+              </section>
             </div>
           </div>
         </>
@@ -540,12 +538,7 @@ function MemberDashboard({ admin, onLogout }) {
                       <td>{s.phone}</td>
                       <td>{s.username}</td>
                       <td>
-                        <div className="staff-cell-pw">
-                          <span className="staff-pw">{visiblePasswords[s.id] ? s.password : '••••••••'}</span>
-                          <button className="staff-pw-toggle" title={visiblePasswords[s.id] ? 'Hide password' : 'Show password'} onClick={() => togglePassword(s.id)}>
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
-                          </button>
-                        </div>
+                        <span className="staff-pw">Protected</span>
                       </td>
                       <td><span className={`staff-status ${s.status === 'Active' ? 'active' : 'inactive'}`}>{s.status}</span></td>
                       <td>
@@ -580,7 +573,7 @@ function MemberDashboard({ admin, onLogout }) {
           <div className="staff-form-group"><label>Designation</label><input type="text" value={staffForm.designation} onChange={e => setStaffForm({ ...staffForm, designation: e.target.value })} placeholder="e.g. Front Desk Agent" /></div>
           <div className="staff-form-group"><label>Phone</label><input type="text" value={staffForm.phone} onChange={e => setStaffForm({ ...staffForm, phone: e.target.value })} placeholder="e.g. +91 98765 43210" /></div>
           <div className="staff-form-group"><label>Username</label><input type="text" value={staffForm.username} onChange={e => setStaffForm({ ...staffForm, username: e.target.value.replace(/\s/g, '') })} placeholder="Enter username" /></div>
-          <div className="staff-form-group"><label>Password</label><input type="text" value={staffForm.password} onChange={e => setStaffForm({ ...staffForm, password: e.target.value })} placeholder="Enter password" /></div>
+          <div className="staff-form-group"><label>{staffEditId ? 'New password (optional)' : 'Password'}</label><input type="password" value={staffForm.password} onChange={e => setStaffForm({ ...staffForm, password: e.target.value })} placeholder={staffEditId ? 'Leave blank to keep current password' : 'Enter password'} /></div>
           <div className="staff-form-group"><label>Status</label>
             <select value={staffForm.status} onChange={e => setStaffForm({ ...staffForm, status: e.target.value })}>
               <option value="Active">Active</option>

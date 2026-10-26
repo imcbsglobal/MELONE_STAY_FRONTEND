@@ -44,10 +44,10 @@ function SuperuserLoginPage({ onLogin }) {
 
 			const data = await response.json()
 
-			if (response.ok && data.success) {
-				onLogin()
+			if (response.ok && data.success && data.token) {
+				onLogin(data)
 			} else {
-				setError(data.error || 'Login failed. Please try again.')
+				setError(data.error || (data.success ? 'Sign-in did not return an authentication token' : 'Login failed. Please try again.'))
 			}
 		} catch {
 			setError('Cannot reach server. Please try again later.')

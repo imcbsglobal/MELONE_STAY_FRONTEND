@@ -3,6 +3,7 @@ import PointGlobe from '../../components/visuals/PointGlobe'
 import earthTexture from '../../assets/earth-atmos.jpg'
 import cloudTexture from '../../assets/earth-clouds.png'
 import meloneLogo from '../../assets/melone logo.png'
+import meloneStayLogo from '../../assets/melone logo stay 2.png'
 
 const styles = String.raw`
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
@@ -833,7 +834,7 @@ function LandingPage({ onLogin }) {
 
   return <><style>{styles}</style><div className="landing">
     <nav className="landing-nav">
-      <div className="landing-brand"><img src={meloneLogo} alt="Melone Stay" className="landing-logo" /></div>
+      <div className="landing-brand"><img src={meloneStayLogo} alt="Melone Stay" className="landing-logo" /></div>
       <div className="landing-nav-links"><a href="#stays">Stays</a><a href="#destinations">Destinations</a><a href="#owners">Owners</a><a href="#faq">FAQ</a></div>
       <div className="landing-login"><a className="ghost" href="#contact">Contact</a><button className="primary" onClick={onLogin}>Sign in</button></div>
     </nav>

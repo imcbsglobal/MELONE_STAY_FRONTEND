@@ -35,25 +35,33 @@ function App() {
 
   const goLanding = () => navigate('/')
 
-  const login = () => {
+  const login = (auth) => {
     localStorage.setItem('ms_superuser', '1')
+    localStorage.setItem('ms_token', auth.token)
+    localStorage.setItem('ms_role', 'superuser')
     setAuthenticated(true)
     navigate('/superuser/dashboard')
   }
 
-  const memberLogin = (admin) => {
+  const memberLogin = (admin, token) => {
+    localStorage.setItem('ms_token', token)
+    localStorage.setItem('ms_role', 'admin')
     localStorage.setItem('ms_admin', JSON.stringify(admin))
     setMember(admin)
     navigate('/member/dashboard')
   }
 
   const memberLogout = () => {
+    localStorage.removeItem('ms_token')
+    localStorage.removeItem('ms_role')
     localStorage.removeItem('ms_admin')
     setMember(null)
     navigate('/login')
   }
 
   const logout = () => {
+    localStorage.removeItem('ms_token')
+    localStorage.removeItem('ms_role')
     localStorage.removeItem('ms_superuser')
     setAuthenticated(false)
     navigate('/login/suser')
@@ -65,8 +73,12 @@ function App() {
     return <SuperuserDashboard onLogout={logout} />
   }
 
-  if (effectiveRoute === '/member/dashboard') {
-    return <MemberDashboard admin={member} onLogout={memberLogout} />
+  const isMemberRoute = ['/member/dashboard', '/member/staffs', '/member/room-category', '/member/rooms', '/member/ota'].includes(effectiveRoute)
+    || effectiveRoute === '/member/room-master'
+    || effectiveRoute.startsWith('/member/room-master/')
+
+  if (isMemberRoute) {
+    return <MemberDashboard admin={member} onLogout={memberLogout} route={effectiveRoute} onNavigate={navigate} />
   }
 
   if (effectiveRoute === '/login/suser') {

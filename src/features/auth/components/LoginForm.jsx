@@ -28,11 +28,11 @@ function LoginForm({ mode, onModeChange, onLogin }) {
         body: JSON.stringify({ client_id: form.client.trim(), username: form.username.trim(), password: form.password }),
       })
       const data = await res.json()
-      if (res.ok && data.success) {
+      if (res.ok && data.success && data.token) {
         setSubmitted(true)
-        if (onLogin) onLogin(data.admin)
+        if (onLogin) onLogin(data.admin, data.token)
       } else {
-        setError(data.error || 'Invalid credentials')
+        setError(data.error || (data.success ? 'Sign-in did not return an authentication token' : 'Invalid credentials'))
       }
     } catch {
       setError('Failed to connect to server')
