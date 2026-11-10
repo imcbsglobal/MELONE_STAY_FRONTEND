@@ -5,6 +5,9 @@ import RoomCategory from '../../masters/RoomCategory'
 import RoomMaster from '../../masters/RoomMaster'
 import RoomsList from '../../masters/rooms/RoomsList'
 import OtaMaster from '../../masters/ota/OtaMaster'
+import TaxMaster from '../../masters/TaxMaster'
+import CurrencyMaster from '../../masters/CurrencyMaster'
+import ActivityLogPage from '../activity-log/ActivityLogPage'
 import { apiFetch } from '../../lib/api'
 
 const styles = String.raw`
@@ -182,6 +185,43 @@ const styles = String.raw`
 @media (max-width: 1100px) { .dash-stats { grid-template-columns: repeat(2, 1fr); } .member-stats { grid-template-columns: repeat(2, 1fr); } .dash-grid { grid-template-columns: 1fr; } .staffs-stats { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 768px) { .member-layout { grid-template-columns: 1fr; } .member-topbar { padding: 14px 18px; } .member-content { padding: 20px 18px; } }
 @media (max-width: 560px) { .member-stats { grid-template-columns: 1fr; } .staff-form-grid { grid-template-columns: 1fr; } .staffs-header { flex-direction: column; align-items: flex-start; } }
+
+.staffs-page-tabs { display: flex; gap: 6px; margin-bottom: 22px; }
+.staffs-page-tab { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 18px; border: 1px solid #d5e4da; border-radius: 999px; background: #fff; color: #77877d; font: 700 12px 'DM Sans', sans-serif; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.staffs-page-tab.is-active { background: #17432b; border-color: #17432b; color: #fff; box-shadow: 0 4px 10px rgba(23,67,43,.18); }
+.staffs-page-tab:not(.is-active):hover { background: #f3faf5; border-color: #b9d3c0; color: #235336; }
+.staffs-page-tab:focus-visible { outline: 2px solid #235336; outline-offset: 2px; }
+
+.user-table-wrap { overflow-x: auto; }
+.user-table { width: 100%; border-collapse: collapse; }
+.user-table th { padding: 11px 16px; color: #8793a4; font-size: 9.5px; font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; text-align: left; border-bottom: 1px solid #eef1f5; background: #fafbfc; white-space: nowrap; }
+.user-table td { padding: 12px 16px; border-bottom: 1px solid #f4f5f7; font-size: 12px; color: #3d4f63; }
+.user-table tr:last-child td { border-bottom: 0; }
+.user-cell-name { display: flex; align-items: center; gap: 10px; }
+.user-avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: linear-gradient(135deg, #215432, #2e7d4f); color: #fff; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.user-name { color: #172131; font-weight: 600; font-size: 12px; }
+.user-sub { color: #8793a4; font-size: 10.5px; margin-top: 1px; }
+.user-products { display: flex; flex-wrap: wrap; gap: 4px; }
+.user-product-badge { display: inline-block; padding: 2px 7px; border-radius: 5px; background: rgba(33,84,50,.08); color: #1d5c35; font-size: 9.5px; font-weight: 700; }
+.user-role-admin { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(139,92,246,.1); color: #7c3aed; font-size: 10px; font-weight: 700; }
+.user-role-user { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #f0f3f6; color: #5b6b80; font-size: 10px; font-weight: 700; }
+.user-status-active { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(54,179,126,.1); color: #1a8058; font-size: 10px; font-weight: 700; }
+.user-status-inactive { display: inline-block; padding: 2px 8px; border-radius: 999px; background: rgba(255,176,1,.14); color: #8a5e00; font-size: 10px; font-weight: 700; }
+.user-actions { display: flex; align-items: center; gap: 7px; }
+.user-edit { padding: 5px 11px; border: 1px solid #d5e4da; border-radius: 8px; background: #f3faf5; color: #1d693f; font: 700 11px 'DM Sans', sans-serif; cursor: pointer; transition: background .15s; }
+.user-edit:hover { background: #e7f4ec; }
+.user-delete { padding: 5px 11px; border: 1px solid #f2d5d0; border-radius: 8px; background: #fff7f6; color: #c0564d; font: 700 11px 'DM Sans', sans-serif; cursor: pointer; transition: background .15s; }
+.user-delete:hover { background: #fdeae7; }
+.user-empty { padding: 44px 20px; text-align: center; color: #a8b3c2; font-size: 12.5px; }
+.user-modal-panel { width: min(100%, 600px); max-height: 92vh; overflow-y: auto; padding: 26px; border-radius: 18px; background: #fff; box-shadow: 0 24px 60px rgba(9,44,28,.25); }
+.user-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.user-section-label { grid-column: 1/-1; margin: 6px 0 2px; padding: 7px 10px; border-radius: 8px; background: #f4f8f4; color: #4a6155; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.user-products-grid { grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.user-product-toggle { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #e4eae5; border-radius: 10px; background: #fafcfa; cursor: pointer; transition: border-color .15s, background .15s; user-select: none; }
+.user-product-toggle.is-on { border-color: #b9d3c0; background: #f0f9f2; }
+.user-product-toggle input { width: 16px; height: 16px; accent-color: #235336; flex-shrink: 0; cursor: pointer; }
+.user-product-toggle span { color: #34453a; font-size: 12px; font-weight: 600; }
+@media (max-width: 560px) { .user-form-grid { grid-template-columns: 1fr; } .user-products-grid { grid-template-columns: 1fr 1fr; } }
 `
 
 function computeLicense(data) {
@@ -250,6 +290,9 @@ const STATUS_POLL_INTERVAL = 30000
 
 function MemberDashboard({ admin, onLogout, route, onNavigate }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [staffsTab, setStaffsTab] = useState('staff') // 'staff' | 'users'
+
+  // ── Staff state ────────────────────────────────────────────────────
   const [showStaffModal, setShowStaffModal] = useState(false)
   const [staffEditId, setStaffEditId] = useState(null)
   const [staffForm, setStaffForm] = useState({ name: '', department: '', designation: '', phone: '', username: '', password: '', status: 'Active' })
@@ -260,6 +303,26 @@ function MemberDashboard({ admin, onLogout, route, onNavigate }) {
   const [staffSaving, setStaffSaving] = useState(false)
   const [staffToRemove, setStaffToRemove] = useState(null)
   const [staffDeleteError, setStaffDeleteError] = useState('')
+
+  // ── Users (User Master) state ──────────────────────────────────────
+  const PRODUCT_FIELDS = ['trellisco', 'claudius', 'melone', 'tixelise', 'trellisco_crm', 'melone_stay', 'trellisco_books']
+  const emptyUserForm = () => ({
+    first_name: '', last_name: '', username: '', password: '', email: '', phone_number: '',
+    user_role: 'USER', status: 'ACTIVE',
+    trellisco: false, claudius: false, melone: false, tixelise: false,
+    trellisco_crm: false, melone_stay: true, trellisco_books: false,
+  })
+  const [userList, setUserList] = useState([])
+  const [userLoading, setUserLoading] = useState(false)
+  const [userError, setUserError] = useState('')
+  const [showUserModal, setShowUserModal] = useState(false)
+  const [userEditId, setUserEditId] = useState(null)
+  const [userForm, setUserForm] = useState(emptyUserForm())
+  const [userFormError, setUserFormError] = useState('')
+  const [userSaving, setUserSaving] = useState(false)
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [userDeleteError, setUserDeleteError] = useState('')
+
   const [dashRooms, setDashRooms] = useState([])
   const [dashLoading, setDashLoading] = useState(true)
   const [dashChart, setDashChart] = useState('rates')
@@ -337,7 +400,13 @@ function MemberDashboard({ admin, onLogout, route, onNavigate }) {
           ? 'rooms'
           : route === '/member/ota'
             ? 'ota'
-            : 'dashboard'
+            : route === '/member/tax-master'
+              ? 'tax-master'
+              : route === '/member/currency-master'
+                ? 'currency-master'
+                : route === '/member/activity-log'
+                  ? 'activity-log'
+                  : 'dashboard'
 
   const staffStats = [
     { label: 'Total Staff', value: staffList.length, color: '#215432', bg: 'rgba(33,84,50,.09)' },
@@ -426,6 +495,133 @@ function MemberDashboard({ admin, onLogout, route, onNavigate }) {
     setStaffToRemove(s)
   }
 
+  // ── Users (User Master) handlers ──────────────────────────────────
+  useEffect(() => {
+    if (!admin || staffsTab !== 'users') return
+    let disposed = false
+    setUserLoading(true)
+    setUserError('')
+    apiFetch(`/api/user-master/`)
+      .then(res => res.json())
+      .then(data => {
+        if (disposed) return
+        if (Array.isArray(data)) setUserList(data)
+        else setUserError(data.error || 'Failed to load users')
+      })
+      .catch(() => { if (!disposed) setUserError('Failed to load users') })
+      .finally(() => { if (!disposed) setUserLoading(false) })
+    return () => { disposed = true }
+  }, [admin, staffsTab])
+
+  const openAddUser = () => {
+    setUserEditId(null)
+    setUserForm(emptyUserForm())
+    setUserFormError('')
+    setShowUserModal(true)
+  }
+
+  const openEditUser = (u) => {
+    setUserEditId(u.id)
+    setUserForm({
+      first_name: u.first_name || '',
+      last_name: u.last_name || '',
+      username: u.username || '',
+      password: '',
+      email: u.email || '',
+      phone_number: u.phone_number || '',
+      user_role: u.user_role || 'USER',
+      status: u.status || 'ACTIVE',
+      trellisco: !!u.trellisco,
+      claudius: !!u.claudius,
+      melone: !!u.melone,
+      tixelise: !!u.tixelise,
+      trellisco_crm: !!u.trellisco_crm,
+      melone_stay: !!u.melone_stay,
+      trellisco_books: !!u.trellisco_books,
+    })
+    setUserFormError('')
+    setShowUserModal(true)
+  }
+
+  const handleSaveUser = async () => {
+    const { first_name, last_name, username, password, email, phone_number, user_role } = userForm
+    if (!first_name.trim() || !last_name.trim() || !username.trim() || !email.trim() || !phone_number.trim() || !user_role) {
+      setUserFormError('First name, last name, username, email, phone and role are required')
+      return
+    }
+    if (!userEditId && !password) {
+      setUserFormError('Password is required for new users')
+      return
+    }
+    const hasProduct = PRODUCT_FIELDS.some(f => userForm[f])
+    if (!hasProduct) {
+      setUserFormError('At least one product access must be enabled')
+      return
+    }
+    setUserSaving(true)
+    setUserFormError('')
+    const payload = {
+      first_name: first_name.trim(), last_name: last_name.trim(),
+      username: username.trim(), email: email.trim(),
+      phone_number: phone_number.trim(), user_role,
+      status: userForm.status,
+      trellisco: userForm.trellisco, claudius: userForm.claudius,
+      melone: userForm.melone, tixelise: userForm.tixelise,
+      trellisco_crm: userForm.trellisco_crm, melone_stay: userForm.melone_stay,
+      trellisco_books: userForm.trellisco_books,
+    }
+    if (password) payload.password = password
+    try {
+      let res
+      if (userEditId) {
+        res = await apiFetch(`/api/user-master/${userEditId}/`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } else {
+        res = await apiFetch(`/api/user-master/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+      const data = await res.json()
+      if (res.ok) {
+        if (userEditId) {
+          setUserList(userList.map(u => u.id === data.id ? data : u))
+        } else {
+          setUserList([data, ...userList])
+        }
+        setShowUserModal(false)
+      } else {
+        const msg = typeof data === 'object' ? Object.values(data).flat().join(' ') : (data.error || 'Something went wrong')
+        setUserFormError(msg)
+      }
+    } catch {
+      setUserFormError('Failed to connect to server')
+    } finally {
+      setUserSaving(false)
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
+    setUserDeleteError('')
+    try {
+      const res = await apiFetch(`/api/user-master/${userToDelete.id}/`, { method: 'DELETE' })
+      if (res.status === 204) {
+        setUserList(userList.filter(u => u.id !== userToDelete.id))
+        setUserToDelete(null)
+      } else {
+        const data = await res.json().catch(() => ({}))
+        setUserDeleteError(data.error || data.detail || `Server error (${res.status})`)
+      }
+    } catch {
+      setUserDeleteError('Failed to connect to server')
+    }
+  }
+
   const rateData = dashRooms.map(room => ({ label: room.code || room.name, value: Number(room.prices?.[0]?.amount) || 0 }))
   const floorCounts = dashRooms.reduce((acc, room) => ({ ...acc, [room.floor]: (acc[room.floor] || 0) + 1 }), {})
   const floorData = Object.keys(floorCounts).sort((p, q) => p.localeCompare(q, undefined, { numeric: true })).map(floor => ({ label: `Floor ${floor}`, value: floorCounts[floor] }))
@@ -437,13 +633,16 @@ function MemberDashboard({ admin, onLogout, route, onNavigate }) {
     <MemberSidebar activeNav={activeNav} staffCount={staffList.length} user={{ name: admin.customer_name || admin.client_id }} onNavigate={onNavigate} onLogoutRequest={() => setShowLogoutConfirm(true)} />
     <div className="member-main">
       <header className="member-topbar">
-        <div><h1>{activeNav === 'staffs' ? 'Staffs' : activeNav === 'room-category' ? 'Room Category' : activeNav === 'room-master' ? 'Room Master' : activeNav === 'rooms' ? 'Rooms List' : activeNav === 'ota' ? 'OTA Master' : 'Dashboard'}</h1><p>Welcome back, {admin.username}</p></div>
+        <div><h1>{activeNav === 'staffs' ? 'Staffs' : activeNav === 'room-category' ? 'Room Category' : activeNav === 'room-master' ? 'Room Master' : activeNav === 'rooms' ? 'Rooms List' : activeNav === 'ota' ? 'OTA Master' : activeNav === 'tax-master' ? 'Tax Master' : activeNav === 'currency-master' ? 'Currency Master' : activeNav === 'activity-log' ? 'Activity Log' : 'Dashboard'}</h1><p>Welcome back, {admin.username}</p></div>
       </header>
       <div className="member-content">
         {activeNav === 'room-category' && <RoomCategory clientId={admin.client_id} />}
         {activeNav === 'room-master' && <RoomMaster clientId={admin.client_id} editRoomId={roomEditId} onNavigate={onNavigate} />}
         {activeNav === 'rooms' && <RoomsList clientId={admin.client_id} onNavigate={onNavigate} />}
         {activeNav === 'ota' && <OtaMaster clientId={admin.client_id} />}
+        {activeNav === 'tax-master' && <TaxMaster clientId={admin.client_id} />}
+        {activeNav === 'currency-master' && <CurrencyMaster clientId={admin.client_id} />}
+        {activeNav === 'activity-log' && <ActivityLogPage clientId={admin.client_id} username={admin.username} projectName={admin.module_name} />}
         {activeNav === 'dashboard' && <>
           <div className="dash-stats">
             <div className="dash-stat is-green"><div className="dash-stat-label">Total rooms</div><div className="dash-stat-value">{dashLoading ? '—' : dashRooms.length}</div><div className="dash-stat-note">Configured for your property</div></div>

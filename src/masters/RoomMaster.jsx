@@ -204,6 +204,23 @@ function RoomMaster({ clientId, editRoomId, onNavigate }) {
       setError('Create a room category before adding a room.')
       return
     }
+
+    // Auto-commit a typed floor if the user hasn't clicked "Add floor" yet
+    let activeFloor = form.floor.trim()
+    if (isAddingFloor && floorInput.trim()) {
+      const floor = floorInput.trim()
+      const existingFloor = floors.find(f => f.toLowerCase() === floor.toLowerCase())
+      activeFloor = existingFloor || floor
+      if (!existingFloor) setAdditionalFloors(current => [...current, floor])
+      setForm(current => ({ ...current, floor: activeFloor }))
+      setFloorInput('')
+      setIsAddingFloor(false)
+    }
+
+    if (!activeFloor) {
+      setError('Please select or add a floor.')
+      return
+    }
     if (!form.prices.length || form.prices.some(price => price.amount === '' || !Number.isFinite(Number(price.amount)) || Number(price.amount) < 0)) {
       setError('Enter a valid non-negative amount for each room price.')
       return
@@ -217,7 +234,7 @@ function RoomMaster({ clientId, editRoomId, onNavigate }) {
       name: form.name.trim(),
       category_id: Number(form.category),
       air_conditioning: form.air_conditioning,
-      floor: form.floor.trim(),
+      floor: activeFloor,
       tax: form.tax,
       prices: form.prices.map(price => ({ amount: price.amount })),
     }

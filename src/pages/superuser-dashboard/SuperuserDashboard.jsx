@@ -208,7 +208,8 @@ const navGroups = [
     title: 'Menu',
     items: [
       { id: 'dashboard', label: 'Dashboard', count: null, icon: icon.dashboard },
-      { id: 'admins', label: 'Admins', count: 24, icon: icon.admins },
+      { id: 'admins', label: 'Admins', count: null, icon: icon.admins },
+      { id: 'signuplist', label: 'Demo Users', count: null, icon: icon.admins },
     ],
   },
 ]
@@ -245,6 +246,7 @@ const rooms = [
 const pageMeta = {
   dashboard: { title: 'Dashboard' },
   admins: { title: 'Admins' },
+  signuplist: { title: 'Demo Users - Signup List' },
 }
 
 function SuperuserDashboard({ onLogout }) {
@@ -273,18 +275,71 @@ function SuperuserDashboard({ onLogout }) {
   const [editError, setEditError] = useState('')
   const [editSuccess, setEditSuccess] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
+  const [signupList, setSignupList] = useState([])
+  const [loadingSignups, setLoadingSignups] = useState(false)
+  const [signupError, setSignupError] = useState('')
 
   const loadAdmins = useCallback(async () => {
     try {
       const res = await apiFetch('/api/list-admins/')
+      if (!res.ok) {
+        // Don't log error if we're being redirected (401/403)
+        if (res.status === 401 || res.status === 403) {
+          return
+        }
+        console.error('Failed to load admins:', res.status, res.statusText)
+        return
+      }
       const data = await res.json()
       if (data.success) setAdminsList(data.admins)
-    } catch {}
+    } catch (error) {
+      // Don't log error if we're being redirected to login
+      if (error.message && error.message.includes('session has expired')) {
+        return
+      }
+      console.error('Error loading admins:', error)
+    }
+  }, [])
+
+  const loadSignups = useCallback(async () => {
+    setLoadingSignups(true)
+    setSignupError('')
+    try {
+      const res = await apiFetch('/api/list-signup-users/')
+      if (!res.ok) {
+        // Don't show error if we're being redirected (401/403)
+        if (res.status === 401 || res.status === 403) {
+          return
+        }
+        console.error('Failed to load signups:', res.status, res.statusText)
+        setSignupError(`Failed to load data (${res.status})`)
+        return
+      }
+      const data = await res.json()
+      if (data.success && Array.isArray(data.users)) {
+        setSignupList(data.users)
+        if (data.users.length === 0) {
+          setSignupError('No signup users found. Users who create accounts will appear here.')
+        }
+      } else {
+        setSignupError('No signup data available')
+      }
+    } catch (error) {
+      // Don't show error if we're being redirected to login
+      if (error.message && error.message.includes('session has expired')) {
+        return
+      }
+      console.error('Error loading signups:', error)
+      setSignupError('Failed to load signup list')
+    } finally {
+      setLoadingSignups(false)
+    }
   }, [])
 
   useEffect(() => {
     if (activeNav === 'admins') loadAdmins()
-  }, [activeNav, loadAdmins])
+    if (activeNav === 'signuplist') loadSignups()
+  }, [activeNav, loadAdmins, loadSignups])
 
   const openAddModal = () => {
     setClientIdInput('')
@@ -462,8 +517,9 @@ function SuperuserDashboard({ onLogout }) {
             {group.items.map(item => (
               <button key={item.id} className={`nav-item ${activeNav === item.id ? 'active' : ''}`} onClick={() => selectNav(item.id)}>
                 <span className="nav-icon">{item.icon}</span>{item.label}
-                {item.id === 'admins' && <span className="nav-count">{(adminsList.length || item.count)}</span>}
-                {item.id !== 'admins' && item.count !== null && <span className="nav-count">{item.count.toLocaleString()}</span>}
+                {item.id === 'admins' && adminsList.length > 0 && <span className="nav-count">{adminsList.length}</span>}
+                {item.id === 'signuplist' && signupList.length > 0 && <span className="nav-count">{signupList.length}</span>}
+                {item.id !== 'admins' && item.id !== 'signuplist' && item.count !== null && <span className="nav-count">{item.count.toLocaleString()}</span>}
               </button>
             ))}
           </div>
@@ -599,6 +655,74 @@ function SuperuserDashboard({ onLogout }) {
                     <td>{a.expiry_date}</td>
                     <td><span className={`admin-badge ${a.status === 'Active' ? 'active' : 'expired'}`}>{a.status}</span></td>
                     <td><div className="cell-actions"><button className="btn-edit" onClick={() => requestEdit(a)}>Edit</button><button className="btn-danger" onClick={() => requestDelete(a)}>Delete</button></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </>
+      }
+      {activeNav === 'signuplist' && <>
+        <div className="admin-topbar">
+          <h2>Demo Users - Signup List</h2>
+          <button className="btn-primary" onClick={loadSignups} disabled={loadingSignups}>
+            {loadingSignups ? <span className="spinner" /> : <>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
+              Refresh
+            </>}
+          </button>
+        </div>
+        {signupError && <div className="form-error" style={{ marginBottom: 20 }}>{signupError}</div>}
+        <div className="admin-table-wrap">
+          {loadingSignups ? (
+            <div className="empty-state">
+              <div className="spinner" style={{ width: 40, height: 40, borderWidth: 3 }} />
+              <p style={{ marginTop: 20 }}>Loading signup list...</p>
+            </div>
+          ) : signupList.length === 0 ? (
+            <div className="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+              <p>No signups found. Users who create accounts will appear here.</p>
+            </div>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 50 }}>No</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Organization</th>
+                  <th>Package</th>
+                  <th>Module</th>
+                  <th>Expiry</th>
+                  <th>Status</th>
+                  <th style={{ width: 120 }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {signupList.map((user, i) => (
+                  <tr key={user.id || i}>
+                    <td style={{ color: '#8793a4', fontWeight: 600 }}>{i + 1}</td>
+                    <td><b style={{ color: '#172131' }}>{user.username}</b></td>
+                    <td style={{ fontFamily: 'monospace', fontSize: 11, color: '#8793a4' }}>{user.email}</td>
+                    <td>{user.customer_name || 'N/A'}</td>
+                    <td>{user.package || 'N/A'}</td>
+                    <td>{user.module_name || 'N/A'}</td>
+                    <td>{user.expiry_date || 'N/A'}</td>
+                    <td><span className={`admin-badge ${user.status === 'Active' ? 'active' : 'expired'}`}>{user.status || 'N/A'}</span></td>
+                    <td>
+                      <div className="cell-actions">
+                        <button className="btn-edit" onClick={() => requestEdit(user)}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                          Edit
+                        </button>
+                        <button className="btn-danger" onClick={() => requestDelete(user)}>
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

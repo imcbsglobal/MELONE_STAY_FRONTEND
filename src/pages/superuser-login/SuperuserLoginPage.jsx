@@ -1,21 +1,304 @@
 import { useState } from 'react'
-import PointGlobe from '../../components/visuals/PointGlobe'
 import AuthIcon from '../../components/icons/AuthIcon'
-import earthTexture from '../../assets/earth-atmos.jpg'
-import cloudTexture from '../../assets/earth-clouds.png'
-import meloneLogo from '../../assets/melone logo.png'
+import meloneLogo from '../../assets/melone logo stay white.png'
 
 const styles = String.raw`
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap');
-.superuser-shell { min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(500px, .95fr); overflow: hidden; background: #071a2a; }
-.superuser-world { position: relative; min-height: 100svh; overflow: hidden; color: #d7eeee; background: radial-gradient(circle at 65% 46%, #143527 0, #0a2417 27%, #082117 61%, #04120c 100%); }
-.superuser-world::before { content: ''; position: absolute; inset: 0; opacity: .45; background-image: linear-gradient(rgba(170, 214, 182, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(170, 214, 182, .06) 1px, transparent 1px); background-size: 46px 46px; mask-image: linear-gradient(90deg, black, transparent 75%); }
-.superuser-brand { position: absolute; z-index: 4; top: 34px; left: 7.5%; display: flex; align-items: center; gap: 10px; color: #ecffff; font-size: clamp(12px, 1.55vw, 16px); font-weight: 700; letter-spacing: -.5px; white-space: nowrap; }.superuser-brand .brand-logo { height: 26px; width: auto; object-fit: contain; }.brand-mark { display: inline-flex; gap: 2px; align-items: flex-end; height: 18px; }.brand-mark i { display: block; width: 4px; border-radius: 4px; background: #ffb001; transform: skewY(-26deg); }.brand-mark i:nth-child(1) { height: 10px; }.brand-mark i:nth-child(2) { height: 15px; background: #2e7d4f; }.brand-mark i:nth-child(3) { height: 12px; background: #8ad0a8; }
-.superuser-copy { position: absolute; z-index: 3; top: 50%; left: 7.5%; width: 350px; transform: translateY(-50%); animation: superuser-copy-rise .8s ease-out both; }.superuser-copy .eyebrow { margin: 0 0 17px; color: #ffb001; text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: 2px; }.superuser-copy h2 { margin: 0; color: #efffff; font-size: clamp(36px, 4vw, 62px); line-height: 1.04; font-weight: 500; letter-spacing: -2px; }.superuser-copy h2 em { color: #8ad0a8; font-family: 'Playfair Display', Georgia, serif; font-weight: 500; }.superuser-copy p { width: 280px; margin: 24px 0 0; color: #9bc4ac; font-size: 13px; line-height: 1.65; }.superuser-globe { position: absolute; inset: 0; pointer-events: none; }.superuser-globe .photo-globe { position: absolute; width: 92%; aspect-ratio: 1; top: 8%; left: 25%; overflow: hidden; border-radius: 50%; background-color: #082117; background-image: url(${earthTexture}); background-position: 93% center; background-size: auto 100%; background-repeat: repeat-x; box-shadow: -18px 12px 28px rgba(0, 0, 0, .24), 0 0 22px rgba(255, 190, 60, .22); animation: superuser-globe-drift 34s linear infinite; }.superuser-globe .photo-globe::before { content: ''; position: absolute; inset: 0; z-index: 1; border-radius: 50%; background: radial-gradient(circle at 30% 25%, rgba(255, 226, 162, .14), transparent 25%); }.superuser-globe .photo-globe::after { content: ''; position: absolute; inset: -2px; z-index: 3; border-radius: 50%; border: 1px solid rgba(255, 213, 116, .42); box-shadow: 0 0 18px rgba(255, 190, 60, .22); }.superuser-globe .photo-clouds { position: absolute; z-index: 2; inset: 0; border-radius: 50%; background-image: url(${cloudTexture}); background-position: 93% center; background-size: auto 100%; background-repeat: repeat-x; mix-blend-mode: screen; opacity: .12; animation: superuser-globe-drift 42s linear infinite reverse; }.superuser-globe .globe-canvas { z-index: 2; opacity: .12; mix-blend-mode: screen; }
-.superuser-panel { position: relative; display: flex; align-items: center; justify-content: center; min-height: 100svh; background: #f2f5f8; }.superuser-panel::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 52% 30%, rgba(255, 255, 255, .9), transparent 56%); }.superuser-form { position: relative; width: min(100% - 72px, 500px); padding: 18px 28px 44px; animation: superuser-rise .8s .08s ease-out both; }.superuser-heading .eyebrow { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 15px; color: #1d693f; text-transform: uppercase; font-size: 11px; font-weight: 700; letter-spacing: 2px; }.superuser-heading .eyebrow::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #215432; box-shadow: 0 0 8px rgba(33, 84, 50, .7); }.superuser-heading h1 { margin: 0; color: #172131; font-family: 'Playfair Display', Georgia, serif; font-size: clamp(50px, 5vw, 68px); font-weight: 500; letter-spacing: -3px; line-height: 1.08; }.superuser-heading h1 span { color: #215432; }.superuser-subtitle { margin: 14px 0 34px; color: #8993a2; font-size: 13px; }.superuser-form form { display: grid; gap: 20px; }.superuser-form form > label { display: grid; gap: 8px; color: #929ba8; font-size: 10px; font-weight: 700; letter-spacing: 1.35px; text-transform: uppercase; }.superuser-form .input-wrap { display: flex; align-items: center; height: 58px; padding: 0 14px; border: 1px solid #e1e5e9; border-radius: 12px; background: #fff; transition: border .2s, box-shadow .2s; }.superuser-form .input-wrap:focus-within { border-color: #7fc297; box-shadow: 0 0 0 3px rgba(33, 84, 50, .12); }.superuser-form .field-icon { flex: 0 0 auto; width: 17px; height: 17px; margin-right: 12px; color: #b8c1cc; }.superuser-form input { width: 100%; min-width: 0; border: 0; outline: 0; color: #253244; background: transparent; font-size: 13px; }.superuser-form input::placeholder { color: #b7c0cb; }.superuser-form .eye-button { display: grid; place-items: center; width: 28px; height: 28px; margin-right: -7px; border: 0; color: #94a0ad; background: transparent; }.superuser-form .eye-button .field-icon { width: 16px; margin: 0; }.superuser-options { display: flex; justify-content: space-between; align-items: center; margin: -4px 0 2px; color: #8e98a6; font-size: 10px; }.superuser-remember { display: flex; align-items: center; gap: 7px; cursor: pointer; }.superuser-remember input { position: absolute; opacity: 0; }.superuser-remember span { width: 13px; height: 13px; border: 1px solid #bfc8d1; border-radius: 3px; background: #fff; }.superuser-remember input:checked + span { border-color: #215432; background: #215432; box-shadow: inset 0 0 0 3px #fff; }.superuser-submit { display: flex; align-items: center; justify-content: center; gap: 9px; height: 58px; margin-top: 6px; border: 0; border-radius: 12px; color: #fff; background: #14402b; font-size: 13px; font-weight: 600; box-shadow: 0 8px 16px rgba(20, 64, 43, .18); transition: transform .2s, background .2s; }.superuser-submit:hover { background: #215432; transform: translateY(-1px); }.superuser-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }.superuser-submit .field-icon { width: 16px; margin: 0; color: #cde8d8; }.superuser-success { margin: -4px 0 0; color: #1d693f; font-size: 11px; text-align: center; }.superuser-error { margin: -4px 0 0; color: #c0392b; font-size: 11px; text-align: center; }.superuser-footer { position: absolute; right: 44px; bottom: 22px; left: 44px; display: flex; justify-content: space-between; color: #a1aab4; font-size: 10px; }.superuser-mobile-brand { display: none; }
-@keyframes superuser-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } } @keyframes superuser-copy-rise { from { opacity: 0; transform: translateY(calc(-50% + 14px)); } to { opacity: 1; transform: translateY(-50%); } } @keyframes superuser-globe-drift { from { background-position: 93% center; } to { background-position: -7% center; } }
-@media (max-width: 900px) { .superuser-shell { grid-template-columns: 1fr; }.superuser-world { min-height: 430px; }.superuser-copy { top: 54%; left: 8%; }.superuser-copy h2 { font-size: 42px; }.superuser-panel { min-height: 640px; }.superuser-form { padding-top: 52px; } }
-@media (max-width: 500px) { .superuser-world { min-height: 370px; }.superuser-brand { top: 25px; }.superuser-copy { top: 57%; left: 8%; }.superuser-copy h2 { font-size: 36px; letter-spacing: -1px; }.superuser-form { width: min(100% - 48px, 500px); padding: 46px 0 58px; }.superuser-heading h1 { font-size: 52px; }.superuser-footer { right: 24px; bottom: 20px; left: 24px; font-size: 9px; } }
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.superuser-shell {
+  min-height: 100svh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-family: 'Lato', sans-serif;
+}
+
+/* ── LEFT PANEL ── */
+.world-panel {
+  position: relative;
+  min-height: 100svh;
+  background: #1a4731;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 40px 32px;
+  overflow: hidden;
+}
+
+/* subtle dot-grid texture */
+.world-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events: none;
+}
+
+.brand {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-logo {
+  height: 48px;
+  width: auto;
+}
+
+.world-copy {
+  position: relative;
+  z-index: 2;
+  margin-top: 52px;
+  color: #fff;
+}
+
+.world-copy h2 {
+  font-size: clamp(32px, 3.5vw, 46px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin-bottom: 16px;
+}
+
+.world-description {
+  font-size: 13px;
+  color: rgba(255,255,255,.65);
+  line-height: 1.65;
+  max-width: 260px;
+}
+
+/* Room illustration card — grows to fill remaining space */
+.room-illustration {
+  position: relative;
+  z-index: 2;
+  margin-top: 40px;
+  flex: 1;
+  width: 100%;
+  max-width: 420px;
+  min-height: 260px;
+  background: #14402b;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.room-illustration svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+}
+
+/* availability pill on the illustration */
+.room-pill {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #1a4731;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.room-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  flex-shrink: 0;
+}
+
+.world-footer {
+  position: relative;
+  z-index: 2;
+  padding-top: 24px;
+  color: rgba(255,255,255,.4);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* ── RIGHT PANEL ── */
+.form-panel {
+  position: relative;
+  min-height: 100svh;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 48px;
+}
+
+.form-inner {
+  width: 100%;
+  max-width: 360px;
+  animation: rise-in .5s ease-out both;
+}
+
+.form-heading h1 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #172131;
+  letter-spacing: -.5px;
+  margin-bottom: 6px;
+}
+
+.form-subtitle {
+  font-size: 13px;
+  color: #8993a2;
+  margin-bottom: 32px;
+}
+
+/* form fields */
+form { display: grid; gap: 18px; }
+
+form > label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #394454;
+}
+
+.input-wrap {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #dde1e7;
+  border-radius: 8px;
+  background: #fff;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.input-wrap:focus-within {
+  border-color: #1a4731;
+  box-shadow: 0 0 0 3px rgba(26,71,49,.1);
+}
+
+.field-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  color: #b8c1cc;
+}
+
+.input-wrap input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #253244;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.input-wrap input::placeholder { color: #b7c0cb; }
+
+.eye-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: -6px;
+  border: 0;
+  background: transparent;
+  color: #94a0ad;
+  cursor: pointer;
+}
+
+.eye-button .field-icon { width: 15px; margin: 0; }
+
+/* remember + forgot row */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: -4px 0 2px;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #394454;
+}
+
+.remember input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #1a4731;
+  cursor: pointer;
+}
+
+/* submit */
+.submit-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: #1a4731;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .2s, transform .15s;
+}
+
+.submit-button:hover { background: #215432; transform: translateY(-1px); }
+.submit-button:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+.submit-button .field-icon { width: 15px; margin: 0; color: #a8d5b8; }
+
+/* messages */
+.superuser-error { margin-top: 4px; color: #c0404a; font-size: 12px; text-align: center; }
+
+/* bottom bar */
+.form-bottom {
+  position: absolute;
+  bottom: 24px;
+  left: 48px;
+  right: 48px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #b0b9c4;
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 860px) {
+  .superuser-shell { grid-template-columns: 1fr; }
+  .world-panel { min-height: 420px; padding: 24px 28px; }
+  .world-copy { margin-top: 32px; }
+  .room-illustration { flex: none; height: 220px; margin-top: 32px; }
+  .world-footer { display: none; }
+  .form-panel { padding: 40px 28px 72px; }
+  .form-bottom { left: 28px; right: 28px; }
+}
 `
 
 function SuperuserLoginPage({ onLogin }) {
@@ -56,26 +339,146 @@ function SuperuserLoginPage({ onLogin }) {
 		}
 	}
 
-	return <><style>{styles}</style><main className="superuser-shell">
-		<section className="superuser-world">
-			<div className="superuser-brand"><img src={meloneLogo} alt="Melone Stay" className="brand-logo" /></div>
-			<div className="superuser-copy"><p className="eyebrow">Secure access</p><h2>Lead the room.<br /><em>Shape what matters.</em></h2><p>Private controls for the people who keep every room moving.</p></div>
-			<div className="superuser-globe"><PointGlobe /></div>
-		</section>
-		<section className="superuser-panel">
-			<div className="superuser-form">
-				<div className="superuser-heading"><p className="eyebrow">Superuser access</p><h1>Sign in<span>.</span></h1><p className="superuser-subtitle">Enter your administrator credentials to continue.</p></div>
-				<form onSubmit={handleSubmit}>
-					<label>Username<div className="input-wrap"><AuthIcon name="user" /><input required value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} placeholder="Your username" /></div></label>
-					<label>Password<div className="input-wrap"><AuthIcon name="lock" /><input required type={showPassword ? 'text' : 'password'} value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="Your password" /><button className="eye-button" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} onClick={() => setShowPassword(!showPassword)}><AuthIcon name="eye" /></button></div></label>
-					  <div className="superuser-options"><label className="superuser-remember"><input type="checkbox" defaultChecked /><span />Remember me</label></div>
-					<button type="submit" className="superuser-submit" disabled={loading}>{loading ? 'Verifying...' : 'Continue'} <AuthIcon name="arrow" /></button>
-					{error && <p className="superuser-error">{error}</p>}
-				</form>
-			</div>
-			<div className="superuser-footer"><span>Private by design</span><span>Admin console</span></div>
-		</section>
-	</main></>
+	return (
+		<>
+			<style>{styles}</style>
+			<main className="superuser-shell">
+
+				{/* ── LEFT: dark green panel ── */}
+				<section className="world-panel">
+					<div className="brand">
+						<img src={meloneLogo} alt="Melone Stay" className="brand-logo" />
+					</div>
+
+					<div className="world-copy">
+						<h2>
+							Find your room.<br />
+							Make it yours.
+						</h2>
+						<p className="world-description">
+							Comfortable stays, verified rooms and easy check-in, wherever you're headed.
+						</p>
+					</div>
+
+					{/* room illustration */}
+					<div className="room-illustration">
+						<div className="room-pill">Deluxe room · Available tonight</div>
+						<svg viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" style={{position:'absolute',inset:0,width:'100%',height:'100%'}}>
+							{/* room background */}
+							<rect width="300" height="220" fill="#0f3320"/>
+							{/* floor */}
+							<rect x="0" y="155" width="300" height="65" fill="#0a2818"/>
+							{/* back wall window */}
+							<rect x="165" y="28" width="95" height="108" rx="4" fill="#0a2818" stroke="#1e5c38" strokeWidth="1.5"/>
+							{/* window panes */}
+							<rect x="172" y="35" width="36" height="42" rx="2" fill="#0d1f15" opacity=".9"/>
+							<rect x="215" y="35" width="36" height="42" rx="2" fill="#0d1f15" opacity=".9"/>
+							<rect x="172" y="84" width="36" height="42" rx="2" fill="#0d1f15" opacity=".9"/>
+							<rect x="215" y="84" width="36" height="42" rx="2" fill="#0d1f15" opacity=".9"/>
+							{/* moon */}
+							<circle cx="233" cy="56" r="11" fill="#f5c842" opacity=".9"/>
+							{/* bed frame */}
+							<rect x="18" y="108" width="138" height="62" rx="6" fill="#1e5c38"/>
+							{/* headboard */}
+							<rect x="18" y="94" width="138" height="24" rx="5" fill="#174a2e"/>
+							{/* pillows */}
+							<rect x="26" y="100" width="50" height="24" rx="5" fill="#e8f0e9" opacity=".92"/>
+							<rect x="84" y="100" width="50" height="24" rx="5" fill="#e8f0e9" opacity=".92"/>
+							{/* blanket */}
+							<rect x="18" y="124" width="138" height="46" rx="4" fill="#2a7a4e"/>
+							<rect x="18" y="124" width="138" height="12" rx="3" fill="#e8f0e9" opacity=".85"/>
+							{/* nightstand */}
+							<rect x="166" y="134" width="38" height="28" rx="4" fill="#174a2e"/>
+							{/* lamp base + pole */}
+							<rect x="182" y="114" width="4" height="20" rx="2" fill="#2a6640"/>
+							{/* lamp shade */}
+							<ellipse cx="184" cy="112" rx="18" ry="9" fill="#f5c842" opacity=".85"/>
+							{/* plant pot */}
+							<rect x="250" y="138" width="18" height="22" rx="3" fill="#174a2e"/>
+							{/* plant leaves */}
+							<ellipse cx="259" cy="130" rx="15" ry="19" fill="#1e6b38"/>
+							<ellipse cx="250" cy="124" rx="11" ry="14" fill="#1a5c30"/>
+							<ellipse cx="267" cy="122" rx="10" ry="12" fill="#1a5c30"/>
+							<defs>
+								<radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+									<stop offset="0%" stopColor="#f5c842" stopOpacity=".5"/>
+									<stop offset="100%" stopColor="#f5c842" stopOpacity="0"/>
+								</radialGradient>
+							</defs>
+						</svg>
+					</div>
+
+					<div className="world-footer">© 2026 Melone Stay</div>
+				</section>
+
+				{/* ── RIGHT: white form panel ── */}
+				<section className="form-panel">
+					<div className="form-inner">
+						<div className="form-heading">
+							<h1>Welcome back</h1>
+							<p className="form-subtitle">Sign in to manage your stays and bookings.</p>
+						</div>
+
+						<form onSubmit={handleSubmit}>
+							<label>
+								Username
+								<div className="input-wrap">
+									<AuthIcon name="user" />
+									<input
+										required
+										value={form.username}
+										onChange={(event) => setForm({ ...form, username: event.target.value })}
+										placeholder="Your username"
+									/>
+								</div>
+							</label>
+
+							<label>
+								Password
+								<div className="input-wrap">
+									<AuthIcon name="lock" />
+									<input
+										required
+										type={showPassword ? 'text' : 'password'}
+										value={form.password}
+										onChange={(event) => setForm({ ...form, password: event.target.value })}
+										placeholder="Your password"
+									/>
+									<button
+										className="eye-button"
+										type="button"
+										aria-label={showPassword ? 'Hide password' : 'Show password'}
+										onClick={() => setShowPassword(!showPassword)}
+									>
+										<AuthIcon name="eye" />
+									</button>
+								</div>
+							</label>
+
+							<div className="form-options">
+								<label className="remember">
+									<input type="checkbox" defaultChecked />
+									Remember me
+								</label>
+							</div>
+
+							<button type="submit" className="submit-button" disabled={loading}>
+								{loading ? 'Verifying...' : 'Sign in'}
+								<AuthIcon name="arrow" />
+							</button>
+
+							{error && <p className="superuser-error">{error}</p>}
+						</form>
+					</div>
+
+					<div className="form-bottom">
+						<span>Terms &amp; privacy</span>
+					</div>
+				</section>
+
+			</main>
+		</>
+	)
 }
 
 export default SuperuserLoginPage

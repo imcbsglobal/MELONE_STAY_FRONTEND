@@ -11,6 +11,7 @@ const icons = {
   staffs: svg(<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>),
   masters: svg(<><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v6c0 1.66 3.58 3 8 3s8-1.34 8-3V5" /><path d="M4 11v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6" /></>),
   rooms: svg(<><rect x="4" y="3" width="16" height="18" rx="1.5" /><path d="M9 21v-4h6v4M8 7h2M14 7h2M8 11h2M14 11h2" /></>),
+  activityLog: svg(<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></>),
   logout: svg(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>),
   chevronRight: svg(<polyline points="9 18 15 12 9 6" />),
   chevronLeft: svg(<polyline points="15 18 9 12 15 6" />),
@@ -23,12 +24,17 @@ const pagePaths = {
   'room-master': '/member/room-master',
   rooms: '/member/rooms',
   ota: '/member/ota',
+  'tax-master': '/member/tax-master',
+  'currency-master': '/member/currency-master',
+  'activity-log': '/member/activity-log',
 }
 
 const masterItems = [
   { id: 'room-category', label: 'Room Category', icon: icons.masters },
   { id: 'room-master', label: 'Room Master', icon: icons.rooms },
   { id: 'ota', label: 'OTA Master', icon: icons.masters },
+  { id: 'tax-master', label: 'Tax Master', icon: icons.masters },
+  { id: 'currency-master', label: 'Currency Master', icon: icons.masters },
 ]
 
 /* ---------- styles (self-contained, all classes prefixed ms-) ---------- */
@@ -153,6 +159,7 @@ function MemberSidebar({ activeNav, staffCount, onNavigate, onLogoutRequest, use
     { id: 'dashboard', label: 'Dashboard', count: null, icon: icons.home },
     { id: 'staffs', label: 'Staffs', count: staffCount, icon: icons.staffs },
     { id: 'rooms', label: 'Room List', count: null, icon: icons.rooms },
+    { id: 'activity-log', label: 'Activity Log', count: null, icon: icons.activityLog },
   ]
 
   const renderItem = (item) => {

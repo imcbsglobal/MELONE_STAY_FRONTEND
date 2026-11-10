@@ -4,6 +4,7 @@ function redirectToLogin() {
     ? '/login/suser'
     : '/login'
 
+  // Clear all auth data
   localStorage.removeItem('ms_token')
   localStorage.removeItem('ms_role')
   localStorage.removeItem('ms_admin')
@@ -25,7 +26,10 @@ export function apiFetch(input, init = {}) {
 
   headers.set('Authorization', `Bearer ${token}`)
   return fetch(input, { ...init, headers }).then(response => {
-    if (response.status === 401) redirectToLogin()
+    if (response.status === 401 || response.status === 403) {
+      // 401 = invalid/expired token, 403 = wrong role/insufficient permissions
+      redirectToLogin()
+    }
     return response
   })
 }
